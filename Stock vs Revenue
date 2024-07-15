@@ -1,0 +1,57 @@
+pip install yfinance
+
+import yfinance as yf
+import pandas as pd
+
+# Fetch Tesla stock data
+tesla_stock = yf.Ticker("TSLA")
+
+# Download historical stock data
+tesla_data = tesla_stock.history(period="max")
+
+# Display the downoaded data
+tesla_data.head()
+
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+
+url = "https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMDeveloperSkillsNetwork-PY0220EN-SkillsNetwork/labs/project/revenue.htm"
+html_data  = requests.get(url).text
+
+soup = BeautifulSoup(html_data, "html.parser")
+
+tesla_tables = soup.find_all('table')
+ 
+for index,table in enumerate(tesla_tables):
+    if ("Tesla Quarterly Revenue" in str(table)):
+        tesla_table_index = index
+ 
+tesla_revenue = pd.DataFrame(columns=["Date", "Revenue"])
+ 
+for row in tesla_tables[tesla_table_index].tbody.find_all("tr"):
+    col = row.find_all("td")
+    if (col !=[]):
+        date = col[0].text
+        revenue = col[1].text.replace("$", "").replace(",", "")
+        new_row = pd.DataFrame({"Date": [date], "Revenue": [revenue]})
+        tesla_revenue = pd.concat([tesla_revenue, new_row], ignore_index=True)
+
+tesla_revenue.head()
+
+
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+def make_graph(tesla_tables, tesla_revenue):
+    fig = make_subplots(rows=4, cols=1, shared_xaxes=True, subplot_titles=("Date", "Revenue"), vertical_spacing=0.3)
+    tesla_tables_specific = stock_data[stock_data.Date <= '2010--06-29']
+    tesla_revenue_specific = tesla_revenue[tesla_revenue.Date <= '2021-09-30']
+    fig.add_trace(go.Scatter(x=tesla_tables.index, y=tesla_tables['Close'], mode='lines', name='Share Price'), row=1, col=1)
+    fig.add_trace(go.Scatter(x=tesla_revenue['Date'], y=tesla_revenue['Revenue'], mode='lines', name='Revenue'), row=2, col=1)
+    fig.update_xaxes(title_text="Date", row=1, col=1)
+    fig.update_xaxes(title_text="Date", row=2, col=1)
+    fig.update_yaxes(title_text="Price (USD)", row=1, col=1)
+    fig.update_yaxes(title_text="Revenue (USD Millions)", row=2, col=1)
+    fig.update_layout(showlegend=False, height=900, title='Tesla Stock Price and Revenue', xaxis_rangeslider_visible=True)
+    fig.show()
